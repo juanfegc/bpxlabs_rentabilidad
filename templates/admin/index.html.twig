@@ -1,0 +1,84 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% block content_title %}Rentabilidad por producto{% endblock %}
+{% block head_stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('styles/profitability.css') }}">
+{% endblock %}
+{% block main %}
+<div class="profitability">
+    <div class="report-intro">
+        <p>Compara lo que cuesta cada unidad con su precio de venta. Importes en euros, sin IVA.</p>
+        <a class="btn btn-primary" href="{{ path('admin_product_new') }}">Añadir producto</a>
+    </div>
+
+    {% if products is empty %}
+        <section class="report-panel report-empty">
+            <span class="report-eyebrow">Tu primer análisis</span>
+            <h2>Descubre cuánto ganas con cada producto</h2>
+            <p>Añade un producto con su precio de venta y registra sus costes unitarios.<br>El gráfico y los márgenes se calcularán automáticamente.</p>
+            <a class="btn btn-primary" href="{{ path('admin_product_new') }}">Crear mi primer producto</a>
+        </section>
+    {% else %}
+        <div class="report-stats" aria-label="Resumen de productos">
+            <div class="report-stat"><span>Con beneficio</span><strong class="result-profit">{{ counts.profit }}</strong></div>
+            <div class="report-stat"><span>Con pérdidas</span><strong class="result-loss">{{ counts.loss }}</strong></div>
+            <div class="report-stat"><span>En equilibrio</span><strong>{{ counts.break_even }}</strong></div>
+            <div class="report-stat"><span>Pendientes de datos</span><strong>{{ counts.pending }}</strong></div>
+        </div>
+
+        <section class="report-panel" aria-labelledby="comparison-title">
+            <div class="report-section-heading">
+                <div><h2 id="comparison-title">Coste y precio de venta</h2><p>La diferencia es tu beneficio por unidad.</p></div>
+                <div class="chart-legend"><span><i class="cost-key" aria-hidden="true"></i>Coste · tono claro</span><span><i class="price-key" aria-hidden="true"></i>Venta · color sólido</span></div>
+            </div>
+            <div class="comparison-chart">
+                <div class="chart-axis" aria-hidden="true"><span>0 €</span><span>{{ (chartMax / 2)|number_format(4, ',', '.') }} €</span><span>{{ chartMax|number_format(4, ',', '.') }} €</span></div>
+                {% for product in products %}
+                    <div class="chart-row" style="--product-color: {{ product.color|e('html_attr') }}">
+                        <a class="chart-name" href="{{ path('admin_product_edit', {entityId: product.id}) }}"><span class="product-color-swatch" aria-hidden="true"></span>{{ product.name }}</a>
+                        <div class="chart-bars" role="img" aria-label="{{ product.name }}: coste {{ product.costCount > 0 ? product.totalCost|number_format(4, ',', '.') ~ ' euros' : 'sin registrar' }}; precio {{ product.salePrice is not null ? product.salePrice|number_format(4, ',', '.') ~ ' euros' : 'sin registrar' }}.">
+                            <div class="chart-track"><div class="chart-bar cost-bar" style="width: {{ product.totalCost / chartMax * 100 }}%"></div>{% if product.costCount == 0 %}<span class="chart-missing">Sin costes</span>{% endif %}</div>
+                            <div class="chart-track"><div class="chart-bar price-bar" style="width: {{ (product.salePrice ?? 0) / chartMax * 100 }}%"></div>{% if product.salePrice is null %}<span class="chart-missing">Sin precio</span>{% endif %}</div>
+                        </div>
+                        <div class="chart-result result-{{ product.status }}">
+                            {% if product.profit is not null %}
+                                <strong>{{ product.profit > 0 ? '+' : '' }}{{ product.profit|number_format(4, ',', '.') }} €</strong>
+                                <span>{{ product.status == 'loss' ? 'Pérdida por unidad' : (product.status == 'profit' ? 'Beneficio por unidad' : 'En equilibrio') }}</span>
+                            {% else %}
+                                <strong>Pendiente</strong><span>Completa precio y costes</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <p class="report-note">Cada producto usa su color: coste arriba en tono claro y rayado; venta abajo en color sólido. Puedes cambiarlo al editar el producto. Todas las barras usan la misma escala. Un coste cero solo se considera registrado si existe al menos una línea de coste.</p>
+        </section>
+
+        <section class="report-panel" aria-labelledby="detail-title">
+            <div class="report-section-heading"><div><h2 id="detail-title">Detalle de rentabilidad</h2><p>{{ products|length }} producto{{ products|length != 1 ? 's' : '' }} · Beneficio = precio − coste · Margen = beneficio / precio × 100</p></div></div>
+            <div class="report-table-wrapper">
+                <table class="report-table">
+                    <thead><tr><th scope="col">Producto</th><th scope="col">Coste / ud.</th><th scope="col">Precio / ud.</th><th scope="col">Beneficio / ud.</th><th scope="col">Margen</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+                    <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <th scope="row"><span class="product-color-swatch" style="--product-color: {{ product.color|e('html_attr') }}" aria-hidden="true"></span>{{ product.name }}</th>
+                            <td>{{ product.costCount > 0 ? product.totalCost|number_format(4, ',', '.') ~ ' €' : 'Sin costes' }}</td>
+                            <td>{{ product.salePrice is not null ? product.salePrice|number_format(4, ',', '.') ~ ' €' : 'Sin precio' }}</td>
+                            <td class="result-{{ product.status }}">{{ product.profit is not null ? product.profit|number_format(4, ',', '.') ~ ' €' : '—' }}</td>
+                            <td>{{ product.margin is not null ? product.margin|number_format(2, ',', '.') ~ ' %' : '—' }}</td>
+                            <td><span class="report-badge result-{{ product.status }}">{{ {profit: 'Con beneficio', loss: 'Con pérdidas', break_even: 'En equilibrio', pending: 'Datos incompletos'}[product.status] }}</span></td>
+                            <td class="report-actions">
+                                <a href="{{ path('admin_product_edit', {entityId: product.id}) }}" aria-label="Editar {{ product.name }}">Editar producto</a>
+                                <a href="{{ path('admin_product_cost_index', {filters: {product: {comparison: '=', value: product.id}}}) }}" aria-label="Ver costes de {{ product.name }}">Ver costes</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="report-note">El margen no se calcula cuando el precio es cero o faltan datos. El beneficio se basa en los costes que hayas registrado; no representa las ventas totales.</p>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

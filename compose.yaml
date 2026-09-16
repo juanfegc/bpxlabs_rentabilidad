@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: "mysql://app:app_dev@database:3306/rentabilidad?serverVersion=10.11.2-MariaDB&charset=utf8mb4"
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: rentabilidad
+      MARIADB_USER: app
+      MARIADB_PASSWORD: app_dev
+      MARIADB_ROOT_PASSWORD: root_dev
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - database_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  database_data:
