@@ -69,3 +69,19 @@
     .chart-bars { grid-column: 1 / -1; grid-row: 2; }
 }
 [data-bs-theme="dark"] .profitability { --report-profit: #65d4af; --report-loss: #ff8691; }
+
+.discount-panel { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.discount-panel .report-note { margin-top: 0; }
+.discount-options { display: flex; gap: 8px; flex-wrap: wrap; --discount-outline-color: #5368d5; }
+.discount-options .btn-outline-primary {
+    --button-bg: transparent;
+    --button-border-color: var(--discount-outline-color);
+    --button-color: var(--discount-outline-color);
+    --button-hover-bg: color-mix(in srgb, var(--discount-outline-color) 8%, transparent);
+    --button-hover-border-color: var(--discount-outline-color);
+    --button-hover-color: var(--discount-outline-color);
+}
+[data-bs-theme="dark"] .discount-options { --discount-outline-color: #1447e6; }
+[data-bs-theme="dark"] .discount-options .btn-outline-primary { --button-color: #a5b4fc; --button-hover-color: #a5b4fc; }
+.normal-value { display: block; color: var(--report-muted); font-size: 11px; margin-top: 4px; }
+.report-stat small { color: var(--report-muted); font-size: 12px; }

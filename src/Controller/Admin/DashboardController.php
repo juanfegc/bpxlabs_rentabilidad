@@ -6,13 +6,17 @@ use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\{Dashboard, MenuItem};
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 final class DashboardController extends AbstractDashboardController
 {
-    public function __construct(private readonly ProfitabilityReport $report) {}
+    public function __construct(private readonly ProfitabilityReport $report, private readonly RequestStack $requests) {}
 
-    public function index(): Response { return $this->render('admin/index.html.twig', $this->report->build()); }
+    public function index(): Response
+    {
+        return $this->render('admin/index.html.twig', $this->report->build($this->requests->getCurrentRequest()?->query->get('discount') === '1'));
+    }
     public function configureDashboard(): Dashboard { return Dashboard::new()->setTitle('Costes y márgenes'); }
     public function configureMenuItems(): iterable
     {

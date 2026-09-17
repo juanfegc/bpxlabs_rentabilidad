@@ -11,6 +11,17 @@
         <a class="btn btn-primary" href="{{ path('admin_product_new') }}">Añadir producto</a>
     </div>
 
+    <section class="report-panel discount-panel" aria-labelledby="discount-title">
+        <div>
+            <h2 id="discount-title">{{ discountEnabled ? 'Simulación: descuento del 10 %' : 'Venta normal' }}</h2>
+            <p class="report-note">Compara el precio habitual con un descuento del 10 %. Los costes y los precios guardados no cambian.</p>
+        </div>
+        <div class="discount-options" role="group" aria-label="Escenario de venta">
+            <a href="{{ path('admin', {discount: '0'}) }}" class="btn {{ not discountEnabled ? 'btn-primary' : 'btn-outline-primary' }}" {% if not discountEnabled %}aria-current="true"{% endif %}>Venta normal</a>
+            <a href="{{ path('admin', {discount: '1'}) }}" class="btn {{ discountEnabled ? 'btn-primary' : 'btn-outline-primary' }}" {% if discountEnabled %}aria-current="true"{% endif %}>Venta con 10% descuento</a>
+        </div>
+    </section>
+
     {% if products is empty %}
         <section class="report-panel report-empty">
             <span class="report-eyebrow">Tu primer análisis</span>
@@ -20,15 +31,15 @@
         </section>
     {% else %}
         <div class="report-stats" aria-label="Resumen de productos">
-            <div class="report-stat"><span>Con beneficio</span><strong class="result-profit">{{ counts.profit }}</strong></div>
-            <div class="report-stat"><span>Con pérdidas</span><strong class="result-loss">{{ counts.loss }}</strong></div>
-            <div class="report-stat"><span>En equilibrio</span><strong>{{ counts.break_even }}</strong></div>
-            <div class="report-stat"><span>Pendientes de datos</span><strong>{{ counts.pending }}</strong></div>
+            <div class="report-stat"><span>Con beneficio</span><strong class="result-profit">{{ counts.profit }}</strong>{% if discountEnabled %}<small>Venta normal: {{ normalCounts.profit }}</small>{% endif %}</div>
+            <div class="report-stat"><span>Con pérdidas</span><strong class="result-loss">{{ counts.loss }}</strong>{% if discountEnabled %}<small>Venta normal: {{ normalCounts.loss }}</small>{% endif %}</div>
+            <div class="report-stat"><span>En equilibrio</span><strong>{{ counts.break_even }}</strong>{% if discountEnabled %}<small>Venta normal: {{ normalCounts.break_even }}</small>{% endif %}</div>
+            <div class="report-stat"><span>Pendientes de datos</span><strong>{{ counts.pending }}</strong>{% if discountEnabled %}<small>Venta normal: {{ normalCounts.pending }}</small>{% endif %}</div>
         </div>
 
         <section class="report-panel" aria-labelledby="comparison-title">
             <div class="report-section-heading">
-                <div><h2 id="comparison-title">Coste y precio de venta</h2><p>La diferencia es tu beneficio por unidad.</p></div>
+                <div><h2 id="comparison-title">Coste y precio de venta{{ discountEnabled ? ' · descuento del 10 %' : '' }}</h2><p>La diferencia es tu beneficio por unidad.</p></div>
                 <div class="chart-legend"><span><i class="cost-key" aria-hidden="true"></i>Coste · tono claro</span><span><i class="price-key" aria-hidden="true"></i>Venta · color sólido</span></div>
             </div>
             <div class="comparison-chart">
@@ -58,15 +69,18 @@
             <div class="report-section-heading"><div><h2 id="detail-title">Detalle de rentabilidad</h2><p>{{ products|length }} producto{{ products|length != 1 ? 's' : '' }} · Beneficio = precio − coste · Margen = beneficio / precio × 100</p></div></div>
             <div class="report-table-wrapper">
                 <table class="report-table">
-                    <thead><tr><th scope="col">Producto</th><th scope="col">Coste / ud.</th><th scope="col">PVU sin IVA</th><th scope="col">Beneficio / ud.</th><th scope="col">Margen</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+                    <thead><tr><th scope="col">Producto</th><th scope="col">Coste / ud.</th><th scope="col">PVU sin IVA{{ discountEnabled ? ' −10 %' : '' }}</th><th scope="col">Beneficio / ud.</th><th scope="col">Margen</th>{% if discountEnabled %}<th scope="col">Diferencia de beneficio / ud.</th>{% endif %}<th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
                     <tbody>
                     {% for product in products %}
                         <tr>
                             <th scope="row"><span class="product-color-swatch" style="--product-color: {{ product.color|e('html_attr') }}" aria-hidden="true"></span>{{ product.name }}</th>
                             <td>{{ product.costCount > 0 ? product.totalCost|number_format(4, ',', '.') ~ ' €' : 'Sin costes' }}</td>
-                            <td>{{ product.salePrice is not null ? product.salePrice|number_format(4, ',', '.') ~ ' €' : 'Sin precio' }}</td>
-                            <td class="result-{{ product.status }}">{{ product.profit is not null ? product.profit|number_format(4, ',', '.') ~ ' €' : '—' }}</td>
-                            <td>{{ product.margin is not null ? product.margin|number_format(2, ',', '.') ~ ' %' : '—' }}</td>
+                            <td>{{ product.salePrice is not null ? product.salePrice|number_format(4, ',', '.') ~ ' €' : 'Sin precio' }}{% if discountEnabled and product.normalPrice is not null %}<small class="normal-value">Normal: {{ product.normalPrice|number_format(4, ',', '.') }} €</small>{% endif %}</td>
+                            <td class="result-{{ product.status }}">{{ product.profit is not null ? product.profit|number_format(4, ',', '.') ~ ' €' : '—' }}{% if discountEnabled and product.normal.profit is not null %}<small class="normal-value">Normal: {{ product.normal.profit|number_format(4, ',', '.') }} €</small>{% endif %}</td>
+                            <td>{{ product.margin is not null ? product.margin|number_format(2, ',', '.') ~ ' %' : '—' }}{% if discountEnabled and product.normal.margin is not null %}<small class="normal-value">Normal: {{ product.normal.margin|number_format(2, ',', '.') }} %</small>{% endif %}</td>
+                            {% if discountEnabled %}
+                                <td class="{{ product.profitDifference < 0 ? 'result-loss' : '' }}">{{ product.profitDifference is not null ? product.profitDifference|number_format(4, ',', '.') ~ ' €' : '—' }}</td>
+                            {% endif %}
                             <td><span class="report-badge result-{{ product.status }}">{{ {profit: 'Con beneficio', loss: 'Con pérdidas', break_even: 'En equilibrio', pending: 'Datos incompletos'}[product.status] }}</span></td>
                             <td class="report-actions">
                                 <a href="{{ path('admin_product_edit', {entityId: product.id}) }}" aria-label="Editar {{ product.name }}">Editar producto</a>
@@ -77,7 +91,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="report-note">El margen no se calcula cuando el precio es cero o faltan datos. El beneficio se basa en los costes que hayas registrado; no representa las ventas totales.</p>
+            <p class="report-note">{% if discountEnabled %}La diferencia de beneficio compara el descuento con la venta normal. {% endif %}El margen no se calcula cuando el precio es cero o faltan datos. El beneficio se basa en los costes que hayas registrado; no representa las ventas totales.</p>
         </section>
     {% endif %}
 </div>

@@ -35,6 +35,44 @@ final class ProfitabilityReportTest extends TestCase
         self::assertSame(0, array_sum($report['counts']));
     }
 
+    public function testDiscountComparesBothScenariosWithoutChangingStoredPrices(): void
+    {
+        $type = (new CostType())->setName('Materia prima');
+        $this->entityManager->persist($type);
+        foreach ([['A beneficio', '110', '60'], ['B pérdida', '110', '95'], ['C equilibrio', '110', '90'],
+            ['D sin precio', null, '10'], ['E sin costes', '110', null], ['F cero', '0', '10']] as [$name, $pvp, $cost]) {
+            $product = (new Product())->setName($name)->setRetailPrice($pvp);
+            $this->entityManager->persist($product);
+            if ($cost !== null) {
+                $this->entityManager->persist((new ProductCost())->setProduct($product)->setCostType($type)->setAmount($cost));
+            }
+        }
+        $this->entityManager->flush();
+
+        $normal = $this->report->build();
+        $discount = $this->report->build(true);
+        self::assertTrue($discount['discountEnabled']);
+        self::assertSame($normal['counts'], $discount['normalCounts']);
+        self::assertSame(['profit' => 1, 'loss' => 2, 'break_even' => 1, 'pending' => 2], $discount['counts']);
+        self::assertSame($normal['chartMax'], $discount['chartMax']);
+        $first = $discount['products'][0];
+        self::assertSame(90.0, $first['salePrice']);
+        self::assertSame(60.0, $first['totalCost']);
+        self::assertSame(30.0, $first['profit']);
+        self::assertSame(40.0, $first['normal']['profit']);
+        self::assertSame(-10.0, $first['profitDifference']);
+        self::assertEqualsWithDelta(33.333333, $first['margin'], 0.000001);
+        self::assertEqualsWithDelta(-6.666667, $first['marginDifference'], 0.000001);
+        foreach ([3, 4] as $index) {
+            self::assertNull($discount['products'][$index]['profitDifference']);
+            self::assertNull($discount['products'][$index]['marginDifference']);
+        }
+        self::assertNull($discount['products'][5]['marginDifference']);
+        $this->entityManager->clear();
+        self::assertSame($normal, $this->report->build());
+        self::assertSame(110.0, (float) $this->entityManager->getRepository(Product::class)->findOneBy(['name' => 'A beneficio'])->getRetailPrice());
+    }
+
     public function testAggregatesCostsAndReflectsEditsAndDeletions(): void
     {
         $type = (new CostType())->setName('Fabricación');

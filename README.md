@@ -77,6 +77,12 @@ La base de datos debe aparecer como `healthy`, el esquema debe estar sincronizad
 
 Ejemplo: PVP `110` (PVU sin IVA `100`), una línea de coste de `40` y otra de `20`. En Inicio verás coste total `60`, beneficio por unidad `40` y margen `40 %`.
 
+### Simular un descuento del 10 %
+
+En Inicio, pulsa **Venta con 10% descuento** para recalcular el gráfico, los estados y la tabla con el precio rebajado. El descuento se aplica al PVU sin IVA (equivale al mismo porcentaje sobre el PVP), con cuatro decimales; los costes no cambian. La tabla compara el precio, beneficio y margen con la venta normal y muestra la diferencia de beneficio en euros por unidad. Las estadísticas muestran también los recuentos normales como referencia.
+
+Pulsa **Venta normal** para volver al escenario habitual. La simulación no modifica los precios guardados. Por ejemplo, con PVP de 110 € (PVU de 100 €) y coste de 60 €, el descuento reduce el PVU a 90 €, el beneficio de 40 € a 30 € y el margen del 40 % al 33,33 %.
+
 ### Importes y colores
 
 - El **PVP se introduce con IVA del 10 % incluido**; el PVU se calcula automáticamente con cuatro decimales. Los costes y los importes del informe son **euros por unidad, sin IVA**. Escribe los decimales con punto, por ejemplo `12.3456`: se admiten hasta ocho cifras enteras y cuatro decimales, sin valores negativos.
