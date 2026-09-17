@@ -9,6 +9,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[UniqueEntity('name')]
 class Product
 {
+    public const VAT_PERCENT = 10;
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     private ?int $id = null;
 
@@ -31,6 +33,11 @@ class Product
     #[Assert\Regex(pattern: '/^\d{1,8}(\.\d{1,4})?$/', message: 'Usa hasta 8 enteros y 4 decimales, separados por punto.')]
     private ?string $salePrice = null;
 
+    #[ORM\Column(type: 'decimal', precision: 13, scale: 4, nullable: true)]
+    #[Assert\PositiveOrZero]
+    #[Assert\Regex(pattern: '/^\d{1,9}(\.\d{1,4})?$/D', message: 'Usa hasta 9 enteros y 4 decimales, separados por punto.')]
+    private ?string $retailPrice = null;
+
     public function getId(): ?int { return $this->id; }
     public function getName(): string { return $this->name; }
     public function setName(string $name): static { $this->name = trim($name); return $this; }
@@ -40,6 +47,18 @@ class Product
     public function setSalePrice(?string $salePrice): static
     {
         $this->salePrice = $salePrice === null || trim($salePrice) === '' ? null : trim($salePrice);
+        $this->retailPrice = $this->salePrice !== null && is_numeric($this->salePrice)
+            ? number_format((float) $this->salePrice * (1 + self::VAT_PERCENT / 100), 4, '.', '')
+            : null;
+        return $this;
+    }
+    public function getRetailPrice(): ?string { return $this->retailPrice; }
+    public function setRetailPrice(?string $retailPrice): static
+    {
+        $this->retailPrice = $retailPrice === null || trim($retailPrice) === '' ? null : trim($retailPrice);
+        $this->salePrice = $this->retailPrice !== null && preg_match('/^\d{1,9}(\.\d{1,4})?$/D', $this->retailPrice)
+            ? number_format((float) $this->retailPrice / (1 + self::VAT_PERCENT / 100), 4, '.', '')
+            : null;
         return $this;
     }
     public function __toString(): string { return $this->name; }

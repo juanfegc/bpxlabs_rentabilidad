@@ -59,4 +59,43 @@ final class ProductProfitabilityTest extends TestCase
         yield ['1,5', false];
         yield ['abc', false];
     }
+
+    public function testRetailPriceCalculatesNetPriceAndKeepsOriginalInput(): void
+    {
+        $product = (new Product())->setRetailPrice('11');
+        self::assertSame('10.0000', $product->getSalePrice());
+        self::assertSame('11', $product->getRetailPrice());
+        $product->setRetailPrice('9.99');
+        self::assertSame('9.0818', $product->getSalePrice());
+        self::assertSame('9.99', $product->getRetailPrice());
+        $product->setRetailPrice('0');
+        self::assertSame('0.0000', $product->getSalePrice());
+        $product->setRetailPrice('');
+        self::assertNull($product->getSalePrice());
+        self::assertNull($product->getRetailPrice());
+    }
+
+    #[DataProvider('retailPrices')]
+    public function testRetailPriceValidation(?string $price, bool $valid): void
+    {
+        $product = (new Product())->setRetailPrice($price);
+        $validator = Validation::createValidatorBuilder()->enableAttributeMapping()->getValidator();
+        self::assertSame($valid, count($validator->validateProperty($product, 'retailPrice')) + count($validator->validateProperty($product, 'salePrice')) === 0);
+    }
+
+    public static function retailPrices(): iterable
+    {
+        foreach (self::prices() as [$price, $valid]) {
+            if ($price !== '100000000') yield [$price, $valid];
+        }
+        yield ['100000000', true];
+        yield ['110000000', false];
+    }
+
+    public function testExistingNetPriceCanStillBeSet(): void
+    {
+        $product = (new Product())->setSalePrice('100');
+        self::assertSame('110.0000', $product->getRetailPrice());
+        self::assertSame('100', $product->getSalePrice());
+    }
 }

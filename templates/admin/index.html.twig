@@ -15,7 +15,7 @@
         <section class="report-panel report-empty">
             <span class="report-eyebrow">Tu primer análisis</span>
             <h2>Descubre cuánto ganas con cada producto</h2>
-            <p>Añade un producto con su precio de venta y registra sus costes unitarios.<br>El gráfico y los márgenes se calcularán automáticamente.</p>
+            <p>Añade un producto con su PVP (IVA incluido) y registra sus costes unitarios.<br>El gráfico y los márgenes se calcularán automáticamente.</p>
             <a class="btn btn-primary" href="{{ path('admin_product_new') }}">Crear mi primer producto</a>
         </section>
     {% else %}
@@ -58,7 +58,7 @@
             <div class="report-section-heading"><div><h2 id="detail-title">Detalle de rentabilidad</h2><p>{{ products|length }} producto{{ products|length != 1 ? 's' : '' }} · Beneficio = precio − coste · Margen = beneficio / precio × 100</p></div></div>
             <div class="report-table-wrapper">
                 <table class="report-table">
-                    <thead><tr><th scope="col">Producto</th><th scope="col">Coste / ud.</th><th scope="col">Precio / ud.</th><th scope="col">Beneficio / ud.</th><th scope="col">Margen</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+                    <thead><tr><th scope="col">Producto</th><th scope="col">Coste / ud.</th><th scope="col">PVU sin IVA</th><th scope="col">Beneficio / ud.</th><th scope="col">Margen</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
                     <tbody>
                     {% for product in products %}
                         <tr>

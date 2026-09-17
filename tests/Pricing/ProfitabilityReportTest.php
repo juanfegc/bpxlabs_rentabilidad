@@ -38,7 +38,7 @@ final class ProfitabilityReportTest extends TestCase
     public function testAggregatesCostsAndReflectsEditsAndDeletions(): void
     {
         $type = (new CostType())->setName('Fabricación');
-        $priced = (new Product())->setName('A completo')->setSalePrice('100');
+        $priced = (new Product())->setName('A completo')->setRetailPrice('110');
         $noPrice = (new Product())->setName('B sin precio');
         $noCosts = (new Product())->setName('C sin costes')->setSalePrice('80');
         $firstCost = (new ProductCost())->setProduct($priced)->setCostType($type)->setAmount('10.1234');

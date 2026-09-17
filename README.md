@@ -66,20 +66,20 @@ docker compose exec -T app php bin/console doctrine:schema:validate
 docker compose exec -T app vendor/bin/phpunit
 ```
 
-La base de datos debe aparecer como `healthy`, el esquema debe estar sincronizado y la suite actual debe pasar **56 pruebas**. Las pruebas del informe usan SQLite en memoria, incluido en la imagen Docker, y no modifican tus productos de MariaDB.
+La base de datos debe aparecer como `healthy`, el esquema debe estar sincronizado y la suite actual debe pasar todas las pruebas. Las pruebas del informe usan SQLite en memoria, incluido en la imagen Docker, y no modifican tus productos de MariaDB.
 
 ## 3. Usar la aplicación
 
-1. En **Productos**, crea un producto con nombre, precio de venta unitario y color. El color inicial es aleatorio; pulsa el cuadro para elegir uno específico. Puedes dejar el precio vacío si aún no lo conoces.
+1. En **Productos**, crea un producto con nombre, PVP con IVA del 10 % y color. El color inicial es aleatorio; pulsa el cuadro para elegir uno específico. El PVU sin IVA se calcula automáticamente (PVP / 1,10) y se utiliza en el informe. Puedes dejar el precio vacío si aún no lo conoces.
 2. En **Costes de producto**, añade una línea por cada coste unitario, eligiendo producto y tipo de coste. Puedes registrar varias líneas del mismo tipo.
 3. Vuelve a **Inicio** para consultar el gráfico y la tabla. Los resultados se recalculan al cargar la página.
 4. Desde la tabla puedes **Editar producto** o **Ver costes** filtrados por ese producto. En **Tipos de coste** puedes gestionar las categorías.
 
-Ejemplo: precio de venta `100`, una línea de coste de `40` y otra de `20`. En Inicio verás coste total `60`, beneficio por unidad `40` y margen `40 %`.
+Ejemplo: PVP `110` (PVU sin IVA `100`), una línea de coste de `40` y otra de `20`. En Inicio verás coste total `60`, beneficio por unidad `40` y margen `40 %`.
 
 ### Importes y colores
 
-- Los importes son **euros por unidad, sin IVA**. Escribe los decimales con punto, por ejemplo `12.3456`: se admiten hasta ocho cifras enteras y cuatro decimales, sin valores negativos.
+- El **PVP se introduce con IVA del 10 % incluido**; el PVU se calcula automáticamente con cuatro decimales. Los costes y los importes del informe son **euros por unidad, sin IVA**. Escribe los decimales con punto, por ejemplo `12.3456`: se admiten hasta ocho cifras enteras y cuatro decimales, sin valores negativos.
 - Los nombres de producto y de tipo de coste son obligatorios y únicos dentro de cada catálogo, con un máximo de 160 caracteres.
 - El precio cero es un precio registrado; un precio vacío significa que está pendiente.
 - El gráfico usa una escala común para todos los productos. La barra superior representa el coste, con el color del producto aclarado y rayado; la inferior representa la venta, con el color sólido.
@@ -100,7 +100,7 @@ Al borrar un producto se borran también sus líneas de coste. Un tipo de coste 
 
 El servicio PHP `App\Pricing\MarginCalculator` también calcula markup sobre coste y precio objetivo a partir de un margen; estas dos funciones aún no tienen controles en la interfaz. El precio objetivo requiere coste positivo y margen entre 0 (incluido) y 100 (excluido). El servicio rechaza valores negativos o no finitos y las divisiones entre cero; sus resultados no se redondean hasta que los usa el informe.
 
-Esta iteración no incluye autenticación, canales de venta, inventario, registro de ventas ni cálculo de IVA. Está preparada para uso local; el servidor de desarrollo no es un despliegue de producción.
+Esta iteración no incluye autenticación, canales de venta, inventario, registro de ventas ni gestión fiscal del IVA. Está preparada para uso local; el servidor de desarrollo no es un despliegue de producción.
 
 ## 4. Parar y volver a arrancar
 
